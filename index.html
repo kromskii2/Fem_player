@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Femboy Cinema Vibes</title>
+    <meta name="description" content="Beautiful Video Player" />
+    <link rel="stylesheet" href="/src/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <!-- Decorative elements -->
+      <div class="decoration-circle top-left"></div>
+      <div class="decoration-circle bottom-right"></div>
+      <div class="decoration-circle mid-left"></div>
+      <div class="decoration-circle mid-right"></div>
+      
+      <!-- Hearts decoration -->
+      <div class="heart top-heart">♥</div>
+      <div class="heart bottom-heart">♥</div>
+      
+      <div class="content-wrapper">
+        <div class="header">
+          <span class="badge">Video Player</span>
+          <h1>Elegant Video Experience</h1>
+          <p>Enjoy your favorite content with our beautiful and intuitive video player</p>
+        </div>
+        
+        <div class="video-container">
+          <div class="video-frame">
+            <video id="video" src="https://www.w3schools.com/html/mov_bbb.mp4">
+              Your browser does not support the video tag.
+            </video>
+            
+            <div class="video-controls">
+              <div class="progress-container">
+                <input type="range" class="progress-bar" value="0" min="0" max="100">
+              </div>
+              
+              <div class="controls-main">
+                <div class="left-controls">
+                  <button id="playPauseBtn" class="control-btn">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  
+                  <div class="volume-container">
+                    <button id="muteBtn" class="control-btn">
+                      <i class="fas fa-volume-up"></i>
+                    </button>
+                    <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="1">
+                  </div>
+                </div>
+                
+                <div class="right-controls">
+                  <button id="fullscreenBtn" class="control-btn">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span class="made-with">Made with ♥ for you</span>
+        </div>
+      </div>
+    </div>
+    <script src="/src/main.js"></script>
+  </body>
+</html>
