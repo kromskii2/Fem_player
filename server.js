@@ -5,44 +5,71 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// Путь к видеофайлу
-const videoPath = path.join(__dirname, 'movie.mp4'); // Замените 'movie.mp4' на ваш фильм
-const serverStartTime = Date.now(); // Время запуска сервера
+// Укажите путь к фильму
+const videoPath = path.join(__dirname, 'movie.mp4');
 
-// Маршрут для главной страницы
-app.use('/', express.static(path.join(__dirname, '')));
+// Определите битрейт (бит в секунду) фильма
+const videoBitrate = 1000000; // Например, 1 Мбит/с (проверьте, используя ffmpeg)
 
-// Маршрут для видео
+// Рассчитаем продолжительность фильма (в секундах)
+const videoFileSize = fs.statSync(videoPath).size; // Размер файла в байтах
+const videoDurationInSeconds = videoFileSize / (videoBitrate / 8); // Длительность = Размер файла / Байт/секунду
+
+// Фиксируем момент запуска фильма
+const serverStartTime = Date.now();
+
+app.use(express.static(path.join(__dirname)));
+
+// Маршрут для передачи видео
 app.get('/video', (req, res) => {
+  const stat = fs.statSync(videoPath);
+  const fileSize = stat.size;
+
+  // Рассчитываем текущую позицию фильма
+  const timeElapsedSinceStart = (Date.now() - serverStartTime) / 1000; // В секундах
+  const currentPlaybackTime = Math.min(timeElapsedSinceStart, videoDurationInSeconds);
+
+  // Рассчитываем начальную позицию в байтах
+  const startByte = Math.floor((currentPlaybackTime / videoDurationInSeconds) * fileSize);
+
   const range = req.headers.range;
-  if (!range) {
-    return res.status(400).send('Requires Range header');
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    const chunkSize = end - start + 1;
+    const file = fs.createReadStream(videoPath, { start, end });
+    const head = {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': 'video/mp4',
+    };
+
+    res.writeHead(206, head);
+    file.pipe(res);
+  } else {
+    const file = fs.createReadStream(videoPath, { start: startByte });
+    const head = {
+      'Content-Length': fileSize - startByte,
+      'Content-Type': 'video/mp4',
+    };
+
+    res.writeHead(200, head);
+    file.pipe(res);
   }
-
-  const videoSize = fs.statSync(videoPath).size;
-  const CHUNK_SIZE = 10 ** 6; // 1MB
-  const start = Number(range.replace(/\D/g, ''));
-  const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
-
-  const videoStream = fs.createReadStream(videoPath, { start, end });
-
-  res.writeHead(206, {
-    'Content-Range': `bytes ${start}-${end}/${videoSize}`,
-    'Accept-Ranges': 'bytes',
-    'Content-Length': end - start + 1,
-    'Content-Type': 'video/mp4',
-  });
-
-  videoStream.pipe(res);
 });
 
-// API для получения текущего времени воспроизведения
-app.get('/current-time', (req, res) => {
-  const elapsedTime = (Date.now() - serverStartTime) / 1000; // Время с момента запуска сервера в секундах
-  res.json({ currentTime: elapsedTime });
+// Маршрут для передачи текущего времени
+app.get('/time', (req, res) => {
+  const timeElapsedSinceStart = (Date.now() - serverStartTime) / 1000; // В секундах
+  const currentPlaybackTime = Math.min(timeElapsedSinceStart, videoDurationInSeconds);
+
+  res.json({ currentPlaybackTime });
 });
 
-// Запуск сервера
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Video duration is approximately ${Math.round(videoDurationInSeconds)} seconds.`);
 });
